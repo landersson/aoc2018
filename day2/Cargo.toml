@@ -1,0 +1,20 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+authors = ["Lars Andersson <larsand@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+[dev-dependencies]
+bencher = "0.1.5"
+
+[[bench]]
+name = "bench"
+harness = false
+
+[[bin]]
+name = "run"
+path = "src/run.rs"
