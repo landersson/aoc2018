@@ -34,7 +34,6 @@ fn make_minute_histograms(notes: Vec<Note>) -> HashMap<u32, MinuteHistogram> {
     let mut it = notes.iter();
     while let Some(note) = it.next() {
         if let Action::BeginShift(id) = note.action {
-            //println!("Begin ID: {}", id);
             let ranges = analyse_shift(it.clone());
 
             for (start, end) in ranges {
@@ -48,40 +47,49 @@ fn make_minute_histograms(notes: Vec<Note>) -> HashMap<u32, MinuteHistogram> {
     minute_histograms
 }
 
-fn find_max_index<'a>(mins: MinuteHistogram) -> u32 {
+fn find_max_index<'a>(mins: &MinuteHistogram) -> u32 {
     let (index, _) = mins.iter().enumerate().max_by_key(|x| x.1).unwrap();
     index as u32
 }
 
-fn find_max_item<'a>(mins: MinuteHistogram) -> (u32, u32) {
+struct HistogramItem {
+    index: u32,
+    value: u32,
+}
+
+fn find_max_item<'a>(mins: &MinuteHistogram) -> HistogramItem {
     let index = find_max_index(mins);
-    (index, mins[index as usize])
+    HistogramItem {
+        index,
+        value: mins[index as usize],
+    }
 }
 
 fn task_1(minute_histograms: &HashMap<u32, MinuteHistogram>) -> u32 {
-    let sums: Vec<_> = minute_histograms
-        .iter()
-        .map(|(id, minutes)| (id, minutes.iter().sum::<u32>()))
-        .collect();
+    struct MinuteSum {
+        id: u32,
+        sum: u32,
+    }
+    let sums = minute_histograms.iter().map(|(id, minutes)| MinuteSum {
+        id: *id,
+        sum: minutes.iter().sum::<u32>(),
+    });
 
-    //sums.sort_by_key(|s| s.1);
-    //let sleepiest = sums.last().unwrap();
-    let sleepiest = sums.iter().max_by_key(|x| x.1).unwrap();
-
-    let minutes = minute_histograms[sleepiest.0];
+    let sleepiest = sums.max_by_key(|x| x.sum).unwrap();
+    let minutes = minute_histograms.get(&sleepiest.id).unwrap();
     let max_index = find_max_index(minutes);
-    max_index * *sleepiest.0
+    max_index * sleepiest.id
 }
 
 fn task_2(minute_histograms: &HashMap<u32, MinuteHistogram>) -> u32 {
     let maxs = minute_histograms
         .iter()
-        .map(|(id, minutes)| (id, find_max_item(*minutes)));
+        .map(|(id, minutes)| (id, find_max_item(minutes)));
 
-    let max_id = maxs.max_by_key(|x| (x.1).1).unwrap();
+    let max_id = maxs.max_by_key(|x| (x.1).value).unwrap();
 
     let guard_id = max_id.0;
-    let max_minute = (max_id.1).0;
+    let max_minute = (max_id.1).index;
     guard_id * max_minute
 }
 
